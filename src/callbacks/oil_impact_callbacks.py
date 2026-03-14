@@ -1,7 +1,7 @@
 from dash import Input, Output
 from src.figures.oil_impact_figures import plot_national_fuel_prices_year
 
-def register_callbacks(app):
+def register_oil_callbacks(app):
     @app.callback(
         Output("national-fuel-prices-graph", "figure"),
         Input("year-dropdown", "value")
