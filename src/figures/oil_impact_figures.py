@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.express as px
 
 # Data root:
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 DEFAULT_DERIVED_DIR = PROJECT_ROOT / "data" / "national_daily_last"
 StatType = Literal["mean", "median"]

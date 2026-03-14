@@ -6,5 +6,5 @@ dash.register_page(__name__, path="/stations")
 
 layout = dbc.Container([
     html.H1("Station Comparison"),
-    html.p("Brand Comparison") 
+    html.P("Brand Comparison") # du musst "P" groß schreiben, nicht klein!!
 ])
