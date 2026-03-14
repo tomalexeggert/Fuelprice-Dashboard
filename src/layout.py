@@ -1,40 +1,24 @@
+import dash
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 
 
-def create_layout():
+def create_navbar():
+    return dbc.NavbarSimple(
+        brand="Fuel Price Dashboard",
+        children=[
+            dbc.NavItem(dbc.NavLink("Home", href="/")),
+            dbc.NavItem(dbc.NavLink("Oil Impact", href="/oil-impact")),
+            dbc.NavItem(dbc.NavLink("Stations", href="/stations")),
+        ],
+        color="primary",
+        dark=True
+    )
+
+
+def create_main_layout():
     return dbc.Container([
+        create_navbar(),
         html.Br(),
-        dbc.Row([
-            dbc.Col(
-                html.H1("Fuel Price Dashboard", style={"textAlign": "center"}),
-                width=12
-            )
-        ]),
-        html.Br(),
-        dbc.Row([
-            dbc.Col(
-                dbc.Card(
-                    dbc.CardBody([
-                        html.H4("Test Card"),
-                        html.P("should show"),
-                        dbc.Button("Test Button", color="primary")
-                    ])
-                ),
-                width=6
-            ),
-            dbc.Col(
-                dbc.Card(
-                    dbc.CardBody([
-                        dcc.Markdown("### Price Spread"),
-                        dcc.Markdown("Diff. between **Premium** and **Regular** fuel price."),
-                        dcc.Markdown(
-                            "**Positive** value indicates that Premium is more expensive than Regular, "
-                            "while **Negative** value indicates that Premium is cheaper than Regular."
-                        )
-                    ])
-                ),
-                width=6
-            )
-        ])
+        dash.page_container
     ], fluid=True)
