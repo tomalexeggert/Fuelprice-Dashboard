@@ -1,5 +1,5 @@
 from dash import Input, Output
-from src.figures.brand_vs_free_figures import plot_brand_comparison
+from src.figures.station_figures import plot_brand_comparison
 
 
 def register_station_callbacks(app):
