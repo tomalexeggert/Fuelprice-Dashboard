@@ -1,6 +1,11 @@
+from dash import Input, Output
+from src.figures.brand_vs_free_figures import plot_brand_comparison
+
+
 def register_station_callbacks(app):
-    """
-    Register callbacks for the stations page.
-    TODO: implement station analysis callbacks.
-    """
-    pass
+    @app.callback(
+        Output("brand-comparison-graph", "figure"),
+        Input("fuel-dropdown", "value")
+    )
+    def update_brand_comparison_graph(fuel):
+        return plot_brand_comparison(fuel=fuel)
