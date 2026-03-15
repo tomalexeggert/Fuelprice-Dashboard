@@ -1,7 +1,7 @@
 import dash
 from dash import html, dcc
 import dash_bootstrap_components as dbc
-from src.figures.brand_vs_free_figures import _FUEL_LABELS
+from src.figures.station_figures import _FUEL_LABELS
 
 dash.register_page(__name__, path="/stations")
 
