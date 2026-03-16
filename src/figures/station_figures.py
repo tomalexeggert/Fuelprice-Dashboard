@@ -96,7 +96,7 @@ def plot_price_difference():
 
 def plot_brand_comparison(fuel: str = "diesel_mean", brands: list = None):
     if brands is None:
-        brands = ["ARAL", "OIL!"]
+        brands = _df_per_brand["brand_normalized"].unique().tolist()
 
     subset = _df_per_brand[_df_per_brand["brand_normalized"].isin(brands)].sort_values("year")
 
@@ -114,9 +114,14 @@ def plot_brand_comparison(fuel: str = "diesel_mean", brands: list = None):
         y=fuel,
         color="brand_normalized",
         markers=True,
-        title=f"{_FUEL_LABELS[fuel]}: {', '.join(brands)} vs. free stations",
+        title=f"{_FUEL_LABELS[fuel]}: Selected brands vs. free stations",
         labels={"year": "Year", fuel: "Mean price (€/L)", "brand_normalized": "Brand"},
     )
+    _default_visible = {"ARAL", "OIL!", "Free Station (avg)"}
+    for trace in fig.data:
+        if trace.name not in _default_visible:
+            trace.visible = "legendonly"
+
     fig.update_layout(
         yaxis_ticksuffix=" €",
         hovermode="x unified",
@@ -146,7 +151,7 @@ def plot_avg_premium_per_brand(fuel: str = "e10_mean"):
         x="brand_normalized",
         y="premium_ct",
         title=f"{_FUEL_LABELS[fuel]}: Brand vs. Free Station Average",
-        labels={"premium_ct": "Additional charge vs. free stations (ct/L)", "brand_normalized": "Brand"},
+        labels={"premium_ct": "Price difference vs. free stations (ct/L)", "brand_normalized": "Brand"},
     )
     fig.update_layout(
         height=500,
