@@ -53,7 +53,6 @@ def plot_brand_vs_free_prices():
     fig.update_layout(
         title="Mean Fuel Prices: Brand vs. Free Stations",
         height=450,
-        width=1000,
         hovermode="x unified",
     )
     return fig
@@ -151,7 +150,6 @@ def plot_avg_premium_per_brand(fuel: str = "e10_mean"):
     )
     fig.update_layout(
         height=500,
-        width=1100,
         yaxis=dict(rangemode="normal"),
     )
     fig.add_hline(y=0, line_color="black", line_width=1)
