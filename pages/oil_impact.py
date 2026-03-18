@@ -5,13 +5,54 @@ import dash_bootstrap_components as dbc
 dash.register_page(__name__, path="/oil-impact")
 
 layout = dbc.Container([
-    html.Br(),
     dbc.Row([
-        dbc.Col([
-            html.H1("Oil Price Impact on Fuel Prices", style={"textAlign": "center"}),
-            html.H4("(a yearwise overview)", style={"textAlign": "center"}),
-        ], width=12)
-    ]),
+        dbc.Col(
+            dbc.Card([
+                dbc.CardHeader("Jump to Section", className="py-2"),
+                dbc.CardBody([
+                    html.Div([
+                        html.A(
+                            dbc.Button(
+                                "Aggregated Analysis",
+                                color="primary",
+                                className="mb-2 w-100"
+                            ),
+                            href="#aggregated-section"
+                        ),
+                        html.A(
+                            dbc.Button(
+                                "Asymmetry Test",
+                                color="warning",
+                                className="w-100"
+                            ),
+                            href="#asymmetry-section"
+                        ),
+                    ])
+                ], className="py-2")
+            ]),
+            width=2
+        ),
+        dbc.Col(
+            html.Div([
+                html.H1(
+                    "Oil Price Impact on Fuel Prices",
+                    style={"textAlign": "center"}
+                ),
+                html.H4(
+                    "(a yearwise overview)",
+                    style={"textAlign": "center"}
+                ),
+            ]),
+            width=8,
+            style={
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "flexDirection": "column"
+            }
+        ),
+    ], align="center"),
+    html.Br(),
     html.Br(),
     dbc.Row([ # Year Dropdown
         dbc.Col([
@@ -133,7 +174,7 @@ between oil price changes and fuel price changes.
         dbc.Col(
             html.H1("NOW: Combinded data from 2014 to 2026", style={"textAlign": "center"})
         )
-    ]),
+    ], id="aggregated-section"),
     html.Br(),
     dbc.Row([
         dbc.Col([
@@ -380,7 +421,7 @@ for our Regression model.
             html.H1("Testing: Asymmetric pass-through of oil price changes", style={"textAlign": "center"}),
             html.P("Do Fuel Prices behave the same by rising and falling Oil Prices?", style={"textAlign": "center"})
         ])
-    ]),
+    ], id="asymmetry-section"),
     html.Br(),
     dbc.Row([
         dbc.Col(
