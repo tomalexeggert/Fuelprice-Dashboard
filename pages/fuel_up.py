@@ -10,10 +10,23 @@ layout = dbc.Container(
         dbc.Row(
             [
                 dbc.Col(
-                    html.H1("When to fuel up?", className="text-center"),
-                    width=12,
-                )
-            ]
+                    html.Div(),
+                    md=3,
+                ),
+                dbc.Col(
+                    html.H1("When to fuel up?", className="text-center mb-0"),
+                    md=6,
+                ),
+                dbc.Col(
+                    dbc.Alert(
+                        "Due to data size and performance constraints, this analysis is based on a reduced dataset covering only Northern Germany (postal codes starting with 1 and 2) and the month of February 2026.",
+                        color="warning",
+                        className="mb-0 py-2",
+                    ),
+                    md=3,
+                ),
+            ],
+            className="align-items-center g-2",
         ),
         html.Br(),
         dbc.Row(

@@ -6,6 +6,7 @@ from src.figures.anomaly_figures import plot_anomaly_rate_per_month, plot_top_st
 dash.register_page(__name__, path="/oil-impact")
 
 layout = dbc.Container([
+    html.Div(id="oil-impact-top"),
     dbc.Row([
         dbc.Col(
             dbc.Card([
@@ -180,9 +181,19 @@ between oil price changes and fuel price changes.
     html.Hr(),
     html.Br(),
     dbc.Row([
+        dbc.Col(width=2),
         dbc.Col(
-            html.H1("NOW: Combinded data from 2014 to 2026", style={"textAlign": "center"})
-        )
+            html.H1("NOW: Combinded data from 2014 to 2026", style={"textAlign": "center"}),
+            width=8
+        ),
+        dbc.Col(
+            html.A(
+                dbc.Button("Back to top", color="primary", size="sm"),
+                href="#oil-impact-top"
+            ),
+            width=2,
+            style={"display": "flex", "justifyContent": "flex-end"}
+        ),
     ], id="aggregated-section"),
     html.Br(),
     dbc.Row([
@@ -426,10 +437,19 @@ for our Regression model.
     html.Hr(),
     html.Br(),
     dbc.Row([
+        dbc.Col(width=2),
         dbc.Col([
             html.H1("Testing: Asymmetric pass-through of oil price changes", style={"textAlign": "center"}),
             html.P("Do Fuel Prices behave the same by rising and falling Oil Prices?", style={"textAlign": "center"})
-        ])
+        ], width=8),
+        dbc.Col(
+            html.A(
+                dbc.Button("Back to top", color="primary", size="sm"),
+                href="#oil-impact-top"
+            ),
+            width=2,
+            style={"display": "flex", "justifyContent": "flex-end"}
+        )
     ], id="asymmetry-section"),
     html.Br(),
     dbc.Row([
@@ -606,9 +626,18 @@ However, the estimated lag structure suggests a more complex dynamic adjustment 
     html.Hr(),
 
     dbc.Row([
+        dbc.Col(width=2),
         dbc.Col([
             html.H1("When and why is Diesel more expensive than E10", style={"textAlign": "center"}),
-        ])
+        ], width=8),
+        dbc.Col(
+            html.A(
+                dbc.Button("Back to top", color="primary", size="sm"),
+                href="#oil-impact-top"
+            ),
+            width=2,
+            style={"display": "flex", "justifyContent": "flex-end"}
+        )
     ], id="anomaly-section"),
     html.Br(),
     
@@ -672,4 +701,5 @@ However, the estimated lag structure suggests a more complex dynamic adjustment 
     ]),
     html.Br(),
     html.Br(),
+    html.Hr(),
 ], fluid=True)
