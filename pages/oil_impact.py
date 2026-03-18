@@ -638,7 +638,7 @@ However, the estimated lag structure suggests a more complex dynamic adjustment 
                 dbc.CardBody([
                     html.P(
                     """
-                    The first plot shows the monthly anomaly rate from 2021 to 2026, where anomalies are defined as situations in which diesel prices are greater than or equal to E10 prices. A sharp increase can be observed in 2022, where the anomaly rate rises to extremely high levels, in some months approaching 100%. After this peak, the anomaly rate drops significantly in 2023 and remains relatively low, with only smaller temporary increases in later periods."),
+                    The first plot shows the monthly anomaly rate from 2021 to 2026, where anomalies are defined as situations in which diesel prices are greater than or equal to E10 prices. We start in 2021 because before that it was really uncommon for Diesel to be more expensive than E10 (~2-4%). A sharp increase can be observed in 2022, where the anomaly rate rises to extremely high levels, in some months approaching 100%. After this peak, the anomaly rate drops significantly in 2023 and remains relatively low, with only smaller temporary increases in later periods."),
                     The second plot illustrates the anomaly rate by hour of the day for 2022. The anomaly rate remains consistently high throughout all hours, with only minor fluctuations. This indicates that the phenomenon is not tied to specific times of day
                     The third plot displays the top 100 gas stations with the highest anomaly rates on a map. The stations are not evenly distributed but appear to be geographically clustered, with a noticeable concentration in Eastern Germany
                     """
