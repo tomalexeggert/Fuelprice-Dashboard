@@ -3,6 +3,7 @@ from src.figures.oil_impact_figures import (plot_national_fuel_prices_year,
                                             plot_ccf_oil_to_fuel, plot_ccf_heatmap_oil,
                                             fit_hac_model_all_years, fit_asym_hac_model_all_years,
                                             plot_asym_lag_effects)
+from src.figures.anomaly_figures import plot_anomaly_rate_by_hour
 
 def register_oil_callbacks(app):
     @app.callback(
@@ -169,3 +170,10 @@ def register_oil_callbacks(app):
             interpretation,
             fig,
         )
+
+    @app.callback(
+        Output("anomaly-rate-by-hour-graph", "figure"),
+        Input("year-dropdown-hourly", "value"),
+    )
+    def update_anomaly_rate_by_hour(year):
+        return plot_anomaly_rate_by_hour(year)

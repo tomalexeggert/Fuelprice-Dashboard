@@ -54,6 +54,7 @@ def plot_brand_vs_free_prices():
         title="Mean Fuel Prices: Brand vs. Free Stations",
         height=450,
         hovermode="x unified",
+        template="plotly_white",
     )
     return fig
 
@@ -88,6 +89,7 @@ def plot_price_difference():
         yaxis_title="Difference (ct/L)",
         yaxis_ticksuffix=" ct",
         hovermode="x unified",
+        template="plotly_white",
         height=450,
         width=900,
     )
@@ -125,6 +127,7 @@ def plot_brand_comparison(fuel: str = "diesel_mean", brands: list = None):
     fig.update_layout(
         yaxis_ticksuffix=" €",
         hovermode="x unified",
+        template="plotly_white",
     )
     return fig
 
@@ -156,6 +159,7 @@ def plot_avg_premium_per_brand(fuel: str = "e10_mean"):
     fig.update_layout(
         height=500,
         yaxis=dict(rangemode="normal"),
+        template="plotly_white",
     )
     fig.add_hline(y=0, line_color="black", line_width=1)
     return fig
