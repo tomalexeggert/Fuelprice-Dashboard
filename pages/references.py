@@ -48,11 +48,12 @@ layout = dbc.Container([
     ),
     dbc.Row([
         dbc.Col(dbc.Card([
-            dbc.CardHeader("Libraries"),
+            dbc.CardHeader("Some of our frequently used Libraries"),
             dbc.CardBody(
                 dbc.Table([
                     html.Thead(html.Tr([html.Th("Library"), html.Th("Version"), html.Th("Purpose")])),
                     html.Tbody([
+                        html.Tr([html.Td(html.A("polars",                    href="https://pola.rs",                                                target="_blank")), html.Td("1.39.2"), html.Td("PERFORMANT data manipulation and analysis")]),
                         html.Tr([html.Td(html.A("dash",                      href="https://dash.plotly.com",                                        target="_blank")), html.Td("4.0.0"),  html.Td("Web application framework")]),
                         html.Tr([html.Td(html.A("dash-bootstrap-components", href="https://dash-bootstrap-components.opensource.faculty.ai",        target="_blank")), html.Td("2.0.4"),  html.Td("Bootstrap UI components for Dash")]),
                         html.Tr([html.Td(html.A("plotly",                    href="https://plotly.com/python",                                      target="_blank")), html.Td("6.6.0"),  html.Td("Interactive charts and graphs")]),

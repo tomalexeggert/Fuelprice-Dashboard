@@ -138,22 +138,22 @@ layout = dbc.Container([
     dbc.Row([
         dbc.Col(dbc.Card(dbc.CardBody([
             html.H4("Fuel Stations Total"),
-            html.H2("14.972"),
+            html.H2("14.442"),
         ]), className="border-primary"), width=3),
 
         dbc.Col(dbc.Card(dbc.CardBody([
-            html.H4("Data we worked with"),
+            html.H4("Raw data Repo size"),
             html.H2("125GB"),
         ]), className="border-primary"), width=3),
 
         dbc.Col(dbc.Card(dbc.CardBody([
             html.H4("appr. Rows in our data"),
-            html.H2("2.000.000.000"),
+            html.H2("2.323.917.540"),
         ]), className="border-primary"), width=3),
 
         dbc.Col(dbc.Card(dbc.CardBody([
             html.H4("Price changes per day"),
-            html.H2("300.000"),
+            html.H2("470.297"),
         ]), className="border-primary"), width=3),
     ]),
     html.Br(),
