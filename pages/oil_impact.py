@@ -611,23 +611,28 @@ However, the estimated lag structure suggests a more complex dynamic adjustment 
         ])
     ], id="anomaly-section"),
     html.Br(),
-
+    
     dbc.Row([
         dbc.Col(
-            dcc.Graph(figure=plot_anomaly_rate_per_month(), style={"height": "400px"}),
+            dbc.Card(dbc.CardBody(
+                dcc.Graph(figure=plot_anomaly_rate_per_month(), style={"height": "400px"}),
+            )),
             width=6
         ),
-        dbc.Col([
-            html.Label("Year you want to analyze"),
-            dcc.Dropdown(
-                id="year-dropdown-hourly",
-                options=[{"label": str(y), "value": y} for y in range(2021, 2027)],
-                value=2024,
-                clearable=False,
-                style={"color": "black"}
-            ),
-            dcc.Graph(id="anomaly-rate-by-hour-graph", style={"height": "340px"}),
-        ], width=6),
+        dbc.Col(
+            dbc.Card(dbc.CardBody([
+                html.Label("Year you want to analyze"),
+                dcc.Dropdown(
+                    id="year-dropdown-hourly",
+                    options=[{"label": str(y), "value": y} for y in range(2021, 2027)],
+                    value=2024,
+                    clearable=False,
+                    style={"color": "black"}
+                ),
+                dcc.Graph(id="anomaly-rate-by-hour-graph", style={"height": "340px"}),
+            ])),
+            width=6
+        ),
     ]),
     html.Br(),
 
@@ -659,7 +664,9 @@ However, the estimated lag structure suggests a more complex dynamic adjustment 
             width=6
         ),
         dbc.Col(
-            dcc.Graph(figure=plot_top_stations_map()),
+            dbc.Card(dbc.CardBody(
+                dcc.Graph(figure=plot_top_stations_map()),
+            )),
             width=6
         ),
     ]),
