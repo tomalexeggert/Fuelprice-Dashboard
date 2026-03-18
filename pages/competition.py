@@ -31,12 +31,28 @@ layout = dbc.Container([
             html.H3("The increasing Price differences of Highway, to normal Stations", className="text-center"),
         ])
     ]),
+
+
     html.Br(),
     dbc.Row([
         dbc.Col([
             html.H3("The effect of proximity to other stations on the average price", className="text-center"),
         ])
     ]),
+    dbc.Row([ # Year Dropdown
+        dbc.Col([
+            html.Label("What clustering of the stations do you want to see?", className="text-center"),
+            dcc.Dropdown(
+                id="Cluster_Dropdown",
+                options=[{"label": "Cluster 1", "value": 1}, {"label": "Cluster 2", "value": 2}],
+                value=1,
+                clearable=False,
+                style={"color": "black"}
+            )
+        ], width=10),
+    ], justify="center"),
+
+
     html.Br(),
     dbc.Row([
         dbc.Col([
