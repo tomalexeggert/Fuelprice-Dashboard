@@ -39,7 +39,7 @@ layout = dbc.Container([
             html.H3("The effect of proximity to other stations on the average price", className="text-center"),
         ])
     ]),
-    dbc.Row([ # Year Dropdown
+    dbc.Row([  # Cluster Dropdown
         dbc.Col([
             html.Label("What clustering of the stations do you want to see?", className="text-center"),
             dcc.Dropdown(
