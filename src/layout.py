@@ -10,7 +10,8 @@ def create_navbar():
             dbc.NavItem(dbc.NavLink("Home", href="/")),
             dbc.NavItem(dbc.NavLink("Oil Impact", href="/oil-impact")),
             dbc.NavItem(dbc.NavLink("Stations", href="/stations")),
-            dbc.NavItem(dbc.NavLink("Competition", href="/competition"))
+            dbc.NavItem(dbc.NavLink("Competition", href="/competition")),
+            dbc.NavItem(dbc.NavLink("Autobahn", href="/autobahn"))
         ],
         color="primary",
         dark=True
