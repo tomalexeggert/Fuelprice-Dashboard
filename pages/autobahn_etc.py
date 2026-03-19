@@ -1122,7 +1122,7 @@ In our application, this corresponds to
 $$
 \text{volatility}_{r,t}
 =
-\beta \cdot \text{extreme\_weather}_{r,t}
+\beta \cdot \text{extreme_weather}_{r,t}
 + \alpha_r
 + \delta_d
 + \eta_h
