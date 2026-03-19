@@ -1,17 +1,68 @@
 import dash
 from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
+from src.figures.anomaly_figures import plot_anomaly_rate_per_month, plot_top_stations_map
 
 dash.register_page(__name__, path="/oil-impact")
 
 layout = dbc.Container([
-    html.Br(),
+    html.Div(id="oil-impact-top"),
     dbc.Row([
-        dbc.Col([
-            html.H1("Oil Price Impact on Fuel Prices", style={"textAlign": "center"}),
-            html.H4("(a yearwise overview)", style={"textAlign": "center"}),
-        ], width=12)
-    ]),
+        dbc.Col(
+            dbc.Card([
+                dbc.CardHeader("Jump to Section", className="py-2"),
+                dbc.CardBody([
+                    html.Div([
+                        html.A(
+                            dbc.Button(
+                                "Aggregated Analysis",
+                                color="primary",
+                                className="mb-2 w-100"
+                            ),
+                            href="#aggregated-section"
+                        ),
+                        html.A(
+                            dbc.Button(
+                                "Asymmetry Test",
+                                color="warning",
+                                className="w-100"
+                            ),
+                            href="#asymmetry-section"
+                        ),
+                        html.A(
+                            dbc.Button(
+                                "Anomaly Analysis",
+                                color="primary",
+                                className="mt-2 w-100"
+                            ),
+                            href="#anomaly-section"
+                        ),
+                    ])
+                ], className="py-2")
+            ]),
+            width=2
+        ),
+        dbc.Col(
+            html.Div([
+                html.H1(
+                    "Oil Price Impact on Fuel Prices",
+                    style={"textAlign": "center"}
+                ),
+                html.H4(
+                    "(a yearwise overview)",
+                    style={"textAlign": "center"}
+                ),
+            ]),
+            width=8,
+            style={
+                "display": "flex",
+                "alignItems": "center",
+                "justifyContent": "center",
+                "flexDirection": "column"
+            }
+        ),
+    ], align="center"),
+    html.Br(),
     html.Br(),
     dbc.Row([ # Year Dropdown
         dbc.Col([
@@ -130,10 +181,20 @@ between oil price changes and fuel price changes.
     html.Hr(),
     html.Br(),
     dbc.Row([
+        dbc.Col(width=2),
         dbc.Col(
-            html.H1("NOW: Combinded data from 2014 to 2026", style={"textAlign": "center"})
-        )
-    ]),
+            html.H1("NOW: Combinded data from 2014 to 2026", style={"textAlign": "center"}),
+            width=8
+        ),
+        dbc.Col(
+            html.A(
+                dbc.Button("Back to top", color="primary", size="sm"),
+                href="#oil-impact-top"
+            ),
+            width=2,
+            style={"display": "flex", "justifyContent": "flex-end"}
+        ),
+    ], id="aggregated-section"),
     html.Br(),
     dbc.Row([
         dbc.Col([
@@ -376,11 +437,20 @@ for our Regression model.
     html.Hr(),
     html.Br(),
     dbc.Row([
+        dbc.Col(width=2),
         dbc.Col([
             html.H1("Testing: Asymmetric pass-through of oil price changes", style={"textAlign": "center"}),
             html.P("Do Fuel Prices behave the same by rising and falling Oil Prices?", style={"textAlign": "center"})
-        ])
-    ]),
+        ], width=8),
+        dbc.Col(
+            html.A(
+                dbc.Button("Back to top", color="primary", size="sm"),
+                href="#oil-impact-top"
+            ),
+            width=2,
+            style={"display": "flex", "justifyContent": "flex-end"}
+        )
+    ], id="asymmetry-section"),
     html.Br(),
     dbc.Row([
         dbc.Col(
@@ -552,6 +622,84 @@ However, the estimated lag structure suggests a more complex dynamic adjustment 
             className="d-flex"
         )
     ], justify="center", className="align-items-stretch"),
+    html.Br(),
+    html.Hr(),
+
+    dbc.Row([
+        dbc.Col(width=2),
+        dbc.Col([
+            html.H1("When and why is Diesel more expensive than E10", style={"textAlign": "center"}),
+        ], width=8),
+        dbc.Col(
+            html.A(
+                dbc.Button("Back to top", color="primary", size="sm"),
+                href="#oil-impact-top"
+            ),
+            width=2,
+            style={"display": "flex", "justifyContent": "flex-end"}
+        )
+    ], id="anomaly-section"),
+    html.Br(),
+    
+    dbc.Row([
+        dbc.Col(
+            dbc.Card(dbc.CardBody(
+                dcc.Graph(figure=plot_anomaly_rate_per_month(), style={"height": "400px"}),
+            )),
+            width=6
+        ),
+        dbc.Col(
+            dbc.Card(dbc.CardBody([
+                html.Label("Year you want to analyze"),
+                dcc.Dropdown(
+                    id="year-dropdown-hourly",
+                    options=[{"label": str(y), "value": y} for y in range(2021, 2027)],
+                    value=2024,
+                    clearable=False,
+                    style={"color": "black"}
+                ),
+                dcc.Graph(id="anomaly-rate-by-hour-graph", style={"height": "340px"}),
+            ])),
+            width=6
+        ),
+    ]),
+    html.Br(),
+
+        dbc.Row([
+        dbc.Col(
+            dbc.Card([
+                dbc.CardHeader(html.H4("Explanation")),
+                dbc.CardBody([
+                    html.P(
+                    """
+                    The first plot shows the monthly anomaly rate from 2021 to 2026, where anomalies are defined as situations in which diesel prices are greater than or equal to E10 prices. We start in 2021 because before that it was really uncommon for Diesel to be more expensive than E10 (~2-4%). A sharp increase can be observed in 2022, where the anomaly rate rises to extremely high levels, in some months approaching 100%. After this peak, the anomaly rate drops significantly in 2023 and remains relatively low, with only smaller temporary increases in later periods."),
+                    The second plot illustrates the anomaly rate by hour of the day for 2022. The anomaly rate remains consistently high throughout all hours, with only minor fluctuations. This indicates that the phenomenon is not tied to specific times of day
+                    The third plot displays the top 100 gas stations with the highest anomaly rates on a map. The stations are not evenly distributed but appear to be geographically clustered, with a noticeable concentration in Eastern Germany
+                    """
+                           ),
+                    dbc.Alert([
+                        html.H4("Analysis"),
+                        html.P(
+                        """
+                        The strong spike in anomaly rates during 2022 and the start of a similar spike in 2026 aligns with the period of sharply increasing global oil prices. As previously established, diesel prices react more strongly to oil price changes than gasoline prices. This amplified response led to diesel prices exceeding E10 prices much more frequently, which explains the dramatic increase in anomalies during this period
+                        The hourly distribution of 2022 confirms that this effect is structural rather than behavioral. Since anomaly rates remain around 80%" across all hours of the day, the phenomenon cannot be attributed to intra-day pricing strategies or timing of price updates. Instead, it reflects a persistent shift in relative price levels driven by external market conditions
+                        The geographic clustering of high-anomaly stations suggests that regional factors also play a role. Differences in supply infrastructure, competition intensity, and regional demand—particularly for diesel—may have amplified the effect in certain areas, especially in Eastern Germany
+                        Overall, the results indicate that the anomalies are a direct consequence of diesel's stronger sensitivity to oil price shocks. The 2022 energy crisis did not only increase prices in general but also created a structural imbalance between fuel types, which became visible through the sharp rise in anomaly rates.
+                        """
+                        ),
+                    ], color="primary"),
+                ]),
+            ]),
+            width=6
+        ),
+        dbc.Col(
+            dbc.Card(dbc.CardBody(
+                dcc.Graph(figure=plot_top_stations_map()),
+            )),
+            width=6
+        ),
+    ]),
+    html.Br(),
     html.Br(),
     html.Hr(),
 ], fluid=True)
