@@ -25,9 +25,9 @@ def plot_clusters(data, labels):
         color="status",
         color_discrete_map={"noise": "red", "clustered": "green"},
         hover_name="uuid",
-        zoom=5,
+        zoom=2,
         center={"lat": 51.1657, "lon": 10.4515},  # Deutschland Mittelpunkt
-        height=700
+        height=1000
     )
 
    
@@ -36,7 +36,7 @@ def plot_clusters(data, labels):
     mapbox=dict(
         style="carto-positron",
         center=dict(lat=51.1657, lon=10.4515),
-        zoom=5,
+        zoom=2,
         
         bounds=dict(
             west=5.5,

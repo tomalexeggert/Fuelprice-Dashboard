@@ -8,5 +8,5 @@ def register_callbacks(app):
 
     register_oil_callbacks(app)
     register_station_callbacks(app)
-    register_competition_callbacks(app)
+    #register_competition_callbacks(app)
     register_autobahn_callbacks(app)
