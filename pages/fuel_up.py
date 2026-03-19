@@ -199,7 +199,14 @@ Higher values indicate less favorable (more expensive) times to refuel, while lo
             dbc.Card([
                 dbc.CardHeader("Post Code - (Leitregion)", style={"textAlign": "center"}),
                 dbc.CardBody([
-                    html.H1("PLaceholder")
+                    html.Img(
+                        src=dash.get_asset_url("plz_leitregionen.png"),
+                        style={
+                            "width": "100%",
+                            "height": "500px",
+                            "objectFit": "contain",
+                        }
+                    )
                 ])
             ])
         ], width=5)
