@@ -62,12 +62,12 @@ right_rq_items = [
         ]),
     ),
     dbc.AccordionItem(
-        title="RQ7: Impact of Local Competition on Fuel Prices",
+        title="RQ7: Impact of Proximity to other Stations on Fuel Prices",
         children=html.Ul([
             html.Li("Do areas with multiple nearby gas stations exhibit lower prices?"),
             html.Li("Analysis of price differences between clustered and isolated stations"),
-            html.Li("Investigation of how competition intensity affects pricing behavior over time"),
-            html.Li("Identification of trends (e.g., increasing or decreasing competition effects)"),
+            html.Li("Is commpetition really the only factor affecting the price of close Stations?"),
+            html.Li("Identification of trends (e.g., increasing or decreasing proximity effects)"),
         ]),
     ),
     dbc.AccordionItem(
