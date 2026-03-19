@@ -961,7 +961,7 @@ For some countries, you can see slight different distributions, while other look
                 dbc.CardBody([
                     html.H5("Price Difference"),
                     html.H1(id="country-price-diff"),
-                    html.Small("Median border - surrounding price")
+                    html.Small("Median price difference")
                 ])
             ]),
             md=3
@@ -983,7 +983,7 @@ For some countries, you can see slight different distributions, while other look
                 dbc.CardBody([
                     html.H5("Significant"),
                     html.H1(id="country-significant"),
-                    html.Small("Whether p < 0.05")
+                    html.Small("The amount of years with significant results (p < 0.05)")
                 ])
             ]),
             md=3
@@ -994,7 +994,7 @@ For some countries, you can see slight different distributions, while other look
                 dbc.CardBody([
                     html.H5("Stations"),
                     html.H1(id="country-stations"),
-                    html.Small("Border / surrounding stations")
+                    html.Small("mean Border / surrounding stations per year")
                 ])
             ]),
             md=3

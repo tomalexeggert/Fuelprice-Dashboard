@@ -151,23 +151,29 @@ def register_autobahn_callbacks(app):
         fig = show_border_price_difference(country)
 
         results_df = load_yearly_border_mann_whitney_results()
-        row = results_df[results_df["Country"] == country]
+        df = results_df[results_df["Country"] == country].copy()
 
-        if row.empty:
+        if df.empty:
             return fig, "-", "-", "-", "-"
 
-        row = row.iloc[0]
+        # Make sure significance is boolean
+        df["Significant (5%)"] = df["Significant (5%)"].apply(
+            lambda x: str(x).strip().lower() == "true" if isinstance(x, str) else bool(x)
+        )
 
-        significant = row["Significant (5%)"]
-        if isinstance(significant, str):
-            significant = significant.strip().lower() == "true"
+        median_price_diff = df["Price_difference"].median()
+        mean_p_value = df["p_value"].mean()
+        mean_n_border = df["N_border"].mean()
+        mean_n_surrounding = df["N_surrounding"].mean()
+        significant_years = df["Significant (5%)"].sum()
+        total_years = len(df)
 
         return (
             fig,
-            f"{row['Price_difference']:.3f} €/liter",
-            f"{row['p_value']:.4g}",
-            "Yes" if significant else "No",
-            f"{int(row['N_border'])} / {int(row['N_surrounding'])}",
+            f"{median_price_diff:.3f} €/liter",
+            f"{mean_p_value:.4g}",
+            f"{significant_years} / {total_years} years",
+            f"{int(round(mean_n_border))} / {int(round(mean_n_surrounding))}",
         )
     
     @app.callback(
