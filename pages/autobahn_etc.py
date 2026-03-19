@@ -1060,7 +1060,11 @@ To get an overview over these weathercodes. Below you can see a plot that shows 
                 options=[{"label": str(year), "value": year} for year in range(2014, 2027)],
                 value=2025,
                 clearable=False,
-                placeholder="Choose a year"
+                placeholder="Choose a year",
+                style={
+                    "color": "black",
+                    "backgroundColor": "white"
+                }
             ),
         ], md=4),
     ], className="mb-4", justify="center"),
