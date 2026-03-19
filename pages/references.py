@@ -46,7 +46,7 @@ layout = dbc.Container([
                         html.P("Statistisches Bundesamt (DESTATIS)"),
                         html.P("ADAC"),
                         html.P("Spiegel Online"),
-                        
+                        html.P("Wikipedia")                       
 
                     ])
                 ], className="text-center mt-3 justify-content-center"),
