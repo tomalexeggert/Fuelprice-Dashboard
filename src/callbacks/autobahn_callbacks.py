@@ -266,7 +266,7 @@ def register_autobahn_callbacks(app):
             return not is_open
         return is_open
     
-    # --- 1. Cluster Maps (Initiales Laden) ---
+    
     @app.callback(
         Output("cluster_1_map", "figure"),
         Output("cluster_2_map", "figure"),
@@ -276,17 +276,16 @@ def register_autobahn_callbacks(app):
         path_1 = PROJECT_ROOT / "data" / "competition" / "stations_clusters_1.csv"
         path_2 = PROJECT_ROOT / "data" / "competition" / "stations_clusters_2.csv"
 
-        # Nur eine Definition! Direkt mit Polars laden.
+        
         cluster_1_data = pl.read_csv(path_1)
         cluster_2_data = pl.read_csv(path_2)
 
         fig_cluster_1 = plot_clusters(cluster_1_data, cluster_1_data["cluster"])
         fig_cluster_2 = plot_clusters(cluster_2_data, cluster_2_data["cluster"])
 
-        return fig_cluster_1, fig_cluster_2
+        return fig_cluster_2, fig_cluster_1
 
 
-    # --- 2. Autobahn Anteil (Pie Chart) ---
     @app.callback(
         Output("cluster_autobahn_share_pie", "figure"),
         Input("cluster_autobahn_share_pie", "id"),
@@ -303,7 +302,7 @@ def register_autobahn_callbacks(app):
         return plot_motorway_cluster_pies(cluster_data_1, cluster_data_2, autobahn_data)
     
     
-    # --- 3. Preis-Analyse (Line Charts reagieren auf Kraftstoff-Buttons) ---
+   
     @app.callback(
         Output("price_diff_cluster_1_line", "figure"),
         Output("price_diff_cluster_2_line", "figure"),
