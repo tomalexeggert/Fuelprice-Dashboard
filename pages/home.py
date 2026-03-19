@@ -24,12 +24,10 @@ left_rq_items = [
         ]),
     ),
     dbc.AccordionItem(
-        title="RQ3: Regional Price Differences and Their Stability",
+        title="RQ3: Influence of special location factors on price differences and their stability",
         children=html.Ul([
-            html.Li("Comparison of fuel prices across regions (e.g., North vs. South, urban vs. rural)"),
-            html.Li("Influence of location factors such as proximity to highways"),
-            html.Li("Statistical comparison of mean prices and variances across regions"),
-            html.Li("Identification of persistent regional pricing patterns over time"),
+            html.Li("Comparison of fuel prices in Germanys border regions"),
+            html.Li("Differences in pricing and  volatility at Autobahn gas stations"),
         ]),
     ),
     dbc.AccordionItem(
@@ -75,10 +73,7 @@ right_rq_items = [
     dbc.AccordionItem(
         title="RQ8: Impact of Extreme Weather Events on Fuel Prices",
         children=html.Ul([
-            html.Li("Do extreme weather conditions influence fuel prices?"),
-            html.Li("Analysis of price changes during events such as storms or heatwaves"),
-            html.Li("Identification of short-term disruptions vs. long-term effects"),
-            html.Li("Exploration of potential mechanisms (e.g., supply chain disruptions, demand spikes)"),
+            html.Li("Do extreme weather event such as storms influence the volatility of gas prices?"),
         ]),
     ),
 ]
