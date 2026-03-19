@@ -41,6 +41,14 @@ layout = dbc.Container([
                                "wind speed, and more. Used in this dashboard to correlate weather conditions with fuel consumption patterns."),
                         html.P([html.Strong("License: "), "Free for non-commercial use – ", html.A("open-meteo.com/en/license", href="https://open-meteo.com/en/license", target="_blank")]),
                     ], md=4),
+                    dbc.Col([
+                        html.H5(html.A("Other References:")),
+                        html.P("Statistisches Bundesamt (DESTATIS)"),
+                        html.P("ADAC"),
+                        html.P("Spiegel Online"),
+                        
+
+                    ])
                 ], className="text-center mt-3 justify-content-center"),
             ])
         ]), md=10, className="mx-auto"),
