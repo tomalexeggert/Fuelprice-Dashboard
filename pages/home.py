@@ -135,25 +135,31 @@ layout = dbc.Container([
         )
     ]),
     html.Br(),
+    dcc.Interval(
+        id="counter-interval",
+        interval=30,
+        n_intervals=0,
+        max_intervals=80,
+    ),
     dbc.Row([
         dbc.Col(dbc.Card(dbc.CardBody([
             html.H4("Fuel Stations Total"),
-            html.H2("14.442"),
+            html.H2(id="stations-total", children="0"),
         ]), className="border-primary"), width=3),
 
         dbc.Col(dbc.Card(dbc.CardBody([
             html.H4("Raw data Repo size"),
-            html.H2("125GB"),
+            html.H2(id="repo-size", children="0 GB"),
         ]), className="border-primary"), width=3),
 
         dbc.Col(dbc.Card(dbc.CardBody([
             html.H4("appr. Rows in our data"),
-            html.H2("2.323.917.540"),
+            html.H2(id="rows-total", children="0"),
         ]), className="border-primary"), width=3),
 
         dbc.Col(dbc.Card(dbc.CardBody([
             html.H4("Price changes per day"),
-            html.H2("470.297"),
+            html.H2(id="price-changes", children="0"),
         ]), className="border-primary"), width=3),
     ]),
     html.Br(),
