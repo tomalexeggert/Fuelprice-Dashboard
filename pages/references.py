@@ -46,8 +46,8 @@ layout = dbc.Container([
                         html.P("Statistisches Bundesamt (DESTATIS)"),
                         html.P("ADAC"),
                         html.P("Spiegel Online"),
-                        html.P("Wikipedia")                       
-
+                        html.P("Wikipedia"),                       
+                        html.P("WBZ Social Science Center", href="https://github.com/WZBSocialScienceCenter/plz_geocoord", target="_blank")
                     ])
                 ], className="text-center mt-3 justify-content-center"),
             ])
