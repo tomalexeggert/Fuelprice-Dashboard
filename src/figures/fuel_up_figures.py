@@ -29,15 +29,18 @@ WEEKDAY_LABELS = ["Mon.", "Tue.", "Wed.", "Thu.", "Fri.", "Sat.", "Sun."]
 
 
 def fuel_up_data_path() -> Path:
+    """Return the expected parquet path for fuel-up dashboard data."""
     return FUEL_UP_DATA_FILE
 
 
 def load_fuel_up_lazy() -> pl.LazyFrame:
+    """Load the fuel-up parquet file lazily and validate required columns."""
     data_path = fuel_up_data_path()
     if not data_path.exists():
         raise FileNotFoundError(
             f"Fuel-up data file not found: {data_path}. "
-            "Expected path: data/fuel_up_dashboard/station_price_observations_web_north_2026_02.parquet"
+            "Expected path: data/fuel_up_dashboard/"
+            "station_price_observations_web_north_2026_02.parquet"
         )
 
     lf = pl.scan_parquet(data_path)
@@ -59,6 +62,7 @@ def apply_fuel_up_filters_lazy(
     brand: str | None = None,
     plz_prefix: str | None = None,
 ) -> pl.LazyFrame:
+    """Apply optional fuel, city, brand, and PLZ filters to a lazy frame."""
     selected_fuel = (fuel_type or "diesel").strip().lower()
     out = lf.filter(pl.col("fuel_type") == selected_fuel)
 
@@ -83,12 +87,14 @@ def apply_fuel_up_filters_lazy(
 
 
 def compute_fuel_up_meta(filtered_lf: pl.LazyFrame) -> dict[str, Any]:
+    """Compute metadata for filtered fuel-up data."""
     n_obs_df = filtered_lf.select(pl.len().alias("n_obs")).collect()
     n_obs = int(n_obs_df["n_obs"][0]) if len(n_obs_df) else 0
     return {"time_period": "2026-02", "n_obs": n_obs}
 
 
 def compute_fuel_up_hour_stats(filtered_lf: pl.LazyFrame) -> pl.DataFrame:
+    """Aggregate hourly mean distance to daily minimum and min probability."""
     return (
         filtered_lf.filter(pl.col("hour").is_between(0, 23, closed="both"))
         .group_by("hour")
@@ -102,6 +108,7 @@ def compute_fuel_up_hour_stats(filtered_lf: pl.LazyFrame) -> pl.DataFrame:
 
 
 def compute_fuel_up_heatmap_stats(filtered_lf: pl.LazyFrame) -> pl.DataFrame:
+    """Aggregate weekday-hour mean distance to daily minimum for a heatmap."""
     return (
         filtered_lf.filter(pl.col("hour").is_between(0, 23, closed="both"))
         .group_by(["weekday", "hour"])
@@ -112,16 +119,22 @@ def compute_fuel_up_heatmap_stats(filtered_lf: pl.LazyFrame) -> pl.DataFrame:
 
 
 def _safe_mean(values: list[float]) -> float | None:
+    """Return the arithmetic mean for non-empty values."""
     if not values:
         return None
     return sum(values) / len(values)
 
 
 def _format_hour(hour: int) -> str:
+    """Format an hour value as HH:00."""
     return f"{hour:02d}:00"
 
 
-def _weekday_to_index(weekday_value: Any, one_based_ints: bool | None = None) -> int | None:
+def _weekday_to_index(
+    weekday_value: Any,
+    one_based_ints: bool | None = None,
+) -> int | None:
+    """Convert weekday values (int/text) to a zero-based weekday index."""
     if weekday_value is None:
         return None
 
@@ -168,6 +181,7 @@ def build_fuel_up_summary(
     brand: str | None = None,
     plz_prefix: str | None = None,
 ) -> html.Div:
+    """Build a textual summary block for filtered fuel-up data."""
     n_obs = int(meta.get("n_obs", 0))
     time_period = str(meta.get("time_period", "2026-02"))
     selected_fuel = (fuel_type or "diesel").strip().lower()
@@ -232,7 +246,8 @@ def build_fuel_up_summary(
     if evening_mean is not None:
         evening_ct = evening_mean * 100.0
         evening_text = (
-            f"Average price between 18-21h is {evening_ct:.2f} ct/L above the daily minimum."
+            "Average price between 18-21h is "
+            f"{evening_ct:.2f} ct/L above the daily minimum."
         )
     else:
         evening_ct = None
@@ -249,7 +264,8 @@ def build_fuel_up_summary(
         savings_ct = morning_ct - evening_ct
         if savings_ct >= 0:
             compare_text = (
-                f"Evening refueling is therefore on average {savings_ct:.2f} ct/L cheaper."
+                "Evening refueling is therefore on average "
+                f"{savings_ct:.2f} ct/L cheaper."
             )
         else:
             compare_text = (
@@ -267,7 +283,8 @@ def build_fuel_up_summary(
             f"{_format_hour(best_window['start_hour'])}-"
             f"{best_window['end_hour']:02d}:59 "
             f"(width={best_window['width']}h), "
-            f"{best_window['mean_diff'] * 100.0:.2f} ct/L above daily minimum on average."
+            f"{best_window['mean_diff'] * 100.0:.2f} ct/L above daily minimum "
+            "on average."
         )
 
     return html.Div(
@@ -290,6 +307,7 @@ def build_fuel_up_summary(
 
 
 def make_empty_fuel_up_figure(message: str) -> go.Figure:
+    """Create a placeholder figure with a centered message."""
     fig = go.Figure()
     fig.add_annotation(
         text=message,
@@ -311,6 +329,7 @@ def make_empty_fuel_up_figure(message: str) -> go.Figure:
 
 
 def make_fuel_up_hour_plot(hour_stats: pl.DataFrame) -> go.Figure:
+    """Create the hourly line chart for mean distance to daily minimum."""
     plot_stats = hour_stats.drop_nulls(["hour", "mean_diff"])
     if plot_stats.is_empty():
         return make_empty_fuel_up_figure("No data after applying filters.")
@@ -326,7 +345,9 @@ def make_fuel_up_hour_plot(hour_stats: pl.DataFrame) -> go.Figure:
             mode="lines+markers",
             line={"width": 2, "color": "#4C78A8"},
             marker={"size": 6},
-            hovertemplate="Hour %{x}:00<br>%{y:.2f} ct/L above daily min<extra></extra>",
+            hovertemplate=(
+                "Hour %{x}:00<br>%{y:.2f} ct/L above daily min<extra></extra>"
+            ),
             name="Mean diff",
         )
     )
@@ -342,6 +363,7 @@ def make_fuel_up_hour_plot(hour_stats: pl.DataFrame) -> go.Figure:
 
 
 def make_fuel_up_heatmap(heatmap_stats: pl.DataFrame) -> go.Figure:
+    """Create the weekday-hour heatmap for mean distance to daily minimum."""
     if heatmap_stats.is_empty():
         return make_empty_fuel_up_figure("No data after applying filters.")
 

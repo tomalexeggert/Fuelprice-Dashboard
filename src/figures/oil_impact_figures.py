@@ -1,63 +1,61 @@
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
+
+import numpy as np
 import pandas as pd
 import plotly.express as px
-import yfinance as yf
-import numpy as np
-from plotly import graph_objects as go
 import statsmodels.api as sm
+import yfinance as yf
+from plotly import graph_objects as go
 
-# Data root:
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-
 DEFAULT_DERIVED_DIR = PROJECT_ROOT / "data" / "national_daily_last"
 StatType = Literal["mean", "median"]
+
 
 def plot_national_fuel_prices_year(
     year: int,
     stat: StatType = "mean",
-    show_oil: bool = False
-):
+    show_oil: bool = False,
+) -> go.Figure:
+    """Plot national daily fuel prices and optionally Brent oil in EUR."""
     if stat not in ("mean", "median"):
         raise ValueError("stat must be 'mean' or 'median'")
 
     file_path = DEFAULT_DERIVED_DIR / f"national_daily_last_{year}.csv"
     df = pd.read_csv(file_path)
-
     df["day"] = pd.to_datetime(df["day"])
     df = df.sort_values("day")
 
     fuels = ["e5", "e10", "diesel"]
     value_cols = [f"{fuel}_{stat}_last" for fuel in fuels]
-
     df_long = df.melt(
         id_vars="day",
         value_vars=value_cols,
         var_name="fuel_type",
-        value_name="price"
+        value_name="price",
     )
-    df_long["fuel_type"] = df_long["fuel_type"].str.replace(f"_{stat}_last", "", regex=False)
+    df_long["fuel_type"] = df_long["fuel_type"].str.replace(
+        f"_{stat}_last",
+        "",
+        regex=False,
+    )
 
     fig = px.line(
         df_long,
         x="day",
         y="price",
         color="fuel_type",
-        title=f"National fuel prices ({stat}) – {year}",
-        labels={
-            "day": "Day",
-            "price": f"Price ({stat})",
-            "fuel_type": "Fuel type"
-        }
+        title=f"National fuel prices ({stat}) - {year}",
+        labels={"day": "Day", "price": f"Price ({stat})", "fuel_type": "Fuel type"},
     )
 
     if show_oil:
         oil_df = load_brent(
             start=f"{year}-01-01",
-            end=f"{year+1}-01-01",
-            interval="1d"
+            end=f"{year + 1}-01-01",
+            interval="1d",
         )
-
         oil_df["day"] = pd.to_datetime(oil_df["time"]).dt.normalize()
         oil_df = oil_df.sort_values("day")
 
@@ -68,10 +66,7 @@ def plot_national_fuel_prices_year(
                 mode="lines",
                 name="Brent oil (EUR)",
                 yaxis="y2",
-                line=dict(
-                          color="black",
-                          width=3
-                )
+                line=dict(color="black", width=3),
             )
         )
 
@@ -79,7 +74,7 @@ def plot_national_fuel_prices_year(
         template="plotly_white",
         xaxis_title="Day",
         yaxis_title=f"Price ({stat})",
-        legend_title="Fuel type"
+        legend_title="Fuel type",
     )
 
     if show_oil:
@@ -88,40 +83,38 @@ def plot_national_fuel_prices_year(
                 title="Oil (EUR)",
                 overlaying="y",
                 side="right",
-                showgrid=False
+                showgrid=False,
             )
         )
 
     return fig
 
-def load_brent(start: str, end: str, interval: str = "1d",) -> pd.DataFrame: #get data from yfinance
 
+def load_brent(start: str, end: str, interval: str = "1d") -> pd.DataFrame:
+    """Load Brent close prices in EUR by merging Brent and EURUSD data."""
     if interval not in ("1d", "1h"):
         raise ValueError("interval must be '1d' or '1h'")
 
-    ticker = "BZ=F"  # Brent futures
+    ticker = "BZ=F"
     df = yf.Ticker(ticker).history(start=start, end=end, interval=interval)
-
     if df is None or df.empty:
         raise RuntimeError(
-            f"No data returned for Brent ({ticker}) with start={start}, end={end}, interval={interval}. "
-            "Yahoo may limit the lookback for intraday intervals (e.g., 1h)."
+            f"No data returned for Brent ({ticker}) with start={start}, end={end}, "
+            f"interval={interval}. Yahoo may limit intraday lookback."
         )
-    # Reset index to column; name may be 'Date' or 'Datetime' depending on interval
+
     df = df.reset_index()
     time_col = "Datetime" if "Datetime" in df.columns else "Date"
-    out = df[[time_col, "Close"]].rename(columns={time_col: "time", "Close": "oil_close"})
-
-    # Make timezone-naive
+    out = df[[time_col, "Close"]].rename(
+        columns={time_col: "time", "Close": "oil_close"}
+    )
     out["time"] = pd.to_datetime(out["time"]).dt.tz_localize(None)
-    # Sort
     out = out.sort_values("time").reset_index(drop=True)
-    # ---------------------------------------------------
-    # Load EUR/USD exchange rate
-    # ---------------------------------------------------
+
     fx = yf.Ticker("EURUSD=X").history(start=start, end=end, interval=interval)
     if fx is None or fx.empty:
         raise RuntimeError("No FX data returned for EURUSD.")
+
     fx = fx.reset_index()
     fx_time_col = "Datetime" if "Datetime" in fx.columns else "Date"
     fx = fx[[fx_time_col, "Close"]].rename(
@@ -129,242 +122,176 @@ def load_brent(start: str, end: str, interval: str = "1d",) -> pd.DataFrame: #ge
     )
     fx["time"] = pd.to_datetime(fx["time"]).dt.tz_localize(None)
     fx = fx.sort_values("time")
-    # ---------------------------------------------------
-    # Merge Brent and FX (robust for hourly data)
-    # ---------------------------------------------------
+
     merged = pd.merge_asof(
         out.sort_values("time"),
         fx.sort_values("time"),
         on="time",
-        direction="backward"
+        direction="backward",
     )
     merged["eurusd"] = merged["eurusd"].ffill().bfill()
-    # ---------------------------------------------------
-    # Convert USD → EUR
-    # ---------------------------------------------------
     merged["oil_close"] = merged["oil_close"] / merged["eurusd"]
-    out = merged[["time", "oil_close"]]
+    return merged[["time", "oil_close"]]
 
-    return out
 
-def plot_ccf_oil_to_fuel(year: int, fuel_type: str, k_lag: int = 25):
+def plot_ccf_oil_to_fuel(year: int, fuel_type: str, k_lag: int = 25) -> go.Figure:
+    """Plot cross-correlation between oil returns and fuel returns by lag."""
     fuel_path = DEFAULT_DERIVED_DIR / f"national_daily_last_{year}.csv"
-    fuel_d = pd.read_csv(fuel_path)
+    fuel_df = pd.read_csv(fuel_path)
+    fuel_df["day"] = pd.to_datetime(fuel_df["day"]).dt.date
 
-    fuel_d["day"] = pd.to_datetime(fuel_d["day"]).dt.date
+    oil_df = load_brent(f"{year}-01-01", f"{year + 1}-01-01", interval="1d")
+    oil_df["day"] = pd.to_datetime(oil_df["time"]).dt.date
+    oil_df = oil_df[["day", "oil_close"]]
 
-    oil_d = load_brent(
-        f"{year}-01-01",
-        f"{year + 1}-01-01",
-        interval="1d"
+    fuel_col = (
+        fuel_type if fuel_type.endswith("_mean_last") else f"{fuel_type}_mean_last"
     )
+    fuel_subset = fuel_df[["day", fuel_col]].copy()
 
-    oil_d["day"] = pd.to_datetime(oil_d["time"]).dt.date
-    oil_d = oil_d[["day", "oil_close"]]
+    merged = fuel_subset.merge(oil_df, on="day", how="left").sort_values("day")
+    merged["oil_close"] = merged["oil_close"].ffill()
+    merged = merged.dropna(subset=["oil_close", fuel_col]).reset_index(drop=True)
 
-    fuel_col = f"{fuel_type}_mean_last" if not fuel_type.endswith("_mean_last") else fuel_type
-    fuel_d_small = fuel_d[["day", fuel_col]].copy()
+    corr_df = merged.copy()
+    corr_df["r_fuel"] = np.log(corr_df[fuel_col]).diff()
+    corr_df["r_oil"] = np.log(corr_df["oil_close"]).diff()
+    corr_df = corr_df.dropna(subset=["r_fuel", "r_oil"]).reset_index(drop=True)
 
-    merged_fill = (
-        fuel_d_small
-        .merge(oil_d, on="day", how="left")
-        .sort_values("day")
-    )
-
-    merged_fill["oil_close"] = merged_fill["oil_close"].ffill()
-    merged_fill = (
-        merged_fill
-        .dropna(subset=["oil_close", fuel_col])
-        .reset_index(drop=True)
-    )
-
-    df_corr = merged_fill.copy()
-    df_corr["r_fuel"] = np.log(df_corr[fuel_col]).diff()
-    df_corr["r_oil"] = np.log(df_corr["oil_close"]).diff()
-    df_corr = (
-        df_corr
-        .dropna(subset=["r_fuel", "r_oil"])
-        .reset_index(drop=True)
-    )
-
-    lags = pd.concat(
-        [df_corr["r_oil"].shift(k) for k in range(k_lag + 1)],
-        axis=1
-    )
+    lags = pd.concat([corr_df["r_oil"].shift(k) for k in range(k_lag + 1)], axis=1)
     lags.columns = [f"r_oil_lag{k}" for k in range(k_lag + 1)]
+    corr_df = pd.concat([corr_df, lags], axis=1)
 
-    df_corr = pd.concat([df_corr, lags], axis=1)
-
-    lag_cols = lags.columns
-    data_corr = df_corr.dropna(subset=list(lag_cols) + ["r_fuel"])
-
+    lag_cols = list(lags.columns)
+    data_corr = corr_df.dropna(subset=lag_cols + ["r_fuel"])
     corr_values = data_corr[lag_cols].corrwith(data_corr["r_fuel"])
 
-    ccf_df = pd.DataFrame({
-        "lag_days": np.arange(k_lag + 1),
-        "corr": corr_values.to_numpy()
-    })
-
+    ccf_df = pd.DataFrame(
+        {"lag_days": np.arange(k_lag + 1), "corr": corr_values.to_numpy()}
+    )
     n = len(data_corr)
     conf = 1.96 / np.sqrt(n)
 
     fig = go.Figure()
-
     for lag, corr in zip(ccf_df["lag_days"], ccf_df["corr"]):
-        fig.add_trace(go.Scatter(
-            x=[lag, lag],
-            y=[0, corr],
-            mode="lines",
-            showlegend=False
-        ))
-        fig.add_trace(go.Scatter(
-            x=[lag],
-            y=[corr],
-            mode="markers",
-            showlegend=False
-        ))
+        fig.add_trace(
+            go.Scatter(x=[lag, lag], y=[0, corr], mode="lines", showlegend=False)
+        )
+        fig.add_trace(
+            go.Scatter(x=[lag], y=[corr], mode="markers", showlegend=False)
+        )
 
     fig.add_hline(y=0)
     fig.add_hline(y=conf, line_dash="dash", annotation_text="95% CI")
     fig.add_hline(y=-conf, line_dash="dash")
-
     fig.update_layout(
-        title=f"CCF Oil → {fuel_type.upper()} ({year})",
+        title=f"CCF Oil -> {fuel_type.upper()} ({year})",
         xaxis_title="Lag (days)",
         yaxis_title="Correlation",
-        template="plotly_white"
+        template="plotly_white",
     )
-
     return fig
 
-def plot_ccf_heatmap_oil(fuel_type: str):
+
+def plot_ccf_heatmap_oil(fuel_type: str) -> go.Figure:
+    """Plot yearly CCF heatmap between oil returns and selected fuel returns."""
     years = range(2014, 2026)
+    ccf_all = [compute_ccf_year(year, fuel_type=fuel_type, K_LAG=10) for year in years]
 
-    ccf_all = []
-    for y in years:
-        corr = compute_ccf_year(y, fuel_type=fuel_type, K_LAG=10)
-        ccf_all.append(corr)
-
-    ccf_all = pd.DataFrame(ccf_all)
-    ccf_all.index = years
-
-    max_abs = np.abs(ccf_all.to_numpy()).max()
+    ccf_df = pd.DataFrame(ccf_all)
+    ccf_df.index = years
+    max_abs = np.abs(ccf_df.to_numpy()).max()
 
     fig = px.imshow(
-        ccf_all,
+        ccf_df,
         color_continuous_scale="RdBu_r",
         zmin=-max_abs,
         zmax=max_abs,
         aspect="auto",
         text_auto=".2f",
-        labels={
-            "x": "Lag",
-            "y": "Year",
-            "color": "Correlation"
-        },
-        title=f"CCF Oil → {fuel_type.split('_')[0].upper()} by Year"
+        labels={"x": "Lag", "y": "Year", "color": "Correlation"},
+        title=f"CCF Oil -> {fuel_type.split('_')[0].upper()} by Year",
     )
-
-    fig.update_layout(
-        template="plotly_white"
-    )
-
+    fig.update_layout(template="plotly_white")
     return fig
 
 
-
-# --------------------------------------------
-
-
-
 def load_merge_year(year: int, fuel_type: str, interval: str = "1d") -> pd.DataFrame:
-    """
-    Load one year of national fuel data + Brent oil, merge on day, forward-fill oil.
-    Returns columns: day, fuel_price, oil_close
-    """
-    oil = load_brent(f"{year}-01-01", f"{year+1}-01-01", interval=interval)
+    """Load and merge one year of fuel prices and Brent prices by day."""
+    oil = load_brent(f"{year}-01-01", f"{year + 1}-01-01", interval=interval)
     fuel_path = DEFAULT_DERIVED_DIR / f"national_daily_last_{year}.csv"
     fuel = pd.read_csv(fuel_path)
 
     oil["day"] = pd.to_datetime(oil["time"]).dt.normalize()
     oil = oil[["day", "oil_close"]]
-
     fuel["day"] = pd.to_datetime(fuel["day"]).dt.date
     oil["day"] = pd.to_datetime(oil["day"]).dt.tz_localize(None).dt.date
 
     fuel = fuel[["day", fuel_type]].rename(columns={fuel_type: "fuel_price"})
-
     merged = fuel.merge(oil, on="day", how="left").sort_values("day")
     merged["oil_close"] = merged["oil_close"].ffill()
     merged = merged.dropna(subset=["fuel_price", "oil_close"]).reset_index(drop=True)
-
     return merged
 
-def add_returns_and_lags(df: pd.DataFrame, K_LAG: int) -> pd.DataFrame:
-    """
-    Add log-returns r_fuel, r_oil and lag columns r_oil_lag0..K_LAG.
-    Drops NaNs created by diff/shift.
-    Expects columns: fuel_price, oil_close
-    """
+
+def add_returns_and_lags(df: pd.DataFrame, k_lag: int) -> pd.DataFrame:
+    """Add fuel/oil returns and lagged oil return columns."""
     out = df.copy()
-
     out["r_fuel"] = np.log(out["fuel_price"]).diff()
-    out["r_oil"]  = np.log(out["oil_close"]).diff()
-
+    out["r_oil"] = np.log(out["oil_close"]).diff()
     out = out.dropna(subset=["r_fuel", "r_oil"]).reset_index(drop=True)
 
-    lags = pd.concat([out["r_oil"].shift(k) for k in range(K_LAG + 1)], axis=1)
-    lags.columns = [f"r_oil_lag{k}" for k in range(K_LAG + 1)]
-
+    lags = pd.concat([out["r_oil"].shift(k) for k in range(k_lag + 1)], axis=1)
+    lags.columns = [f"r_oil_lag{k}" for k in range(k_lag + 1)]
     out = pd.concat([out, lags], axis=1)
-
-    lag_cols = list(lags.columns)
-    out = out.dropna(subset=lag_cols + ["r_fuel"]).reset_index(drop=True)
-
+    out = out.dropna(subset=list(lags.columns) + ["r_fuel"]).reset_index(drop=True)
     return out
 
-def compute_ccf_from_prepared(prep: pd.DataFrame, K_LAG: int) -> pd.Series:
-    """
-    Compute CCF = corr(r_fuel_t, r_oil_{t-k}) for k=0..K_LAG from prepared dataframe.
-    Expects columns r_fuel and r_oil_lag0..K_LAG.
-    """
-    lag_cols = [f"r_oil_lag{k}" for k in range(K_LAG + 1)]
+
+def compute_ccf_from_prepared(prep: pd.DataFrame, k_lag: int) -> pd.Series:
+    """Compute CCF values for lags 0..k_lag from prepared return data."""
+    lag_cols = [f"r_oil_lag{k}" for k in range(k_lag + 1)]
     return prep[lag_cols].corrwith(prep["r_fuel"])
 
-def compute_ccf_year(year: int, fuel_type: str = "e5_mean_last", K_LAG: int = 50) -> pd.Series:
+
+def compute_ccf_year(
+    year: int,
+    fuel_type: str = "e5_mean_last",
+    K_LAG: int = 50,
+) -> pd.Series:
+    """Compute yearly CCF for one fuel type."""
+    k_lag = K_LAG
     merged = load_merge_year(year, fuel_type=fuel_type, interval="1d")
-    prep = add_returns_and_lags(merged, K_LAG=K_LAG)
-    corr = compute_ccf_from_prepared(prep, K_LAG=K_LAG)
-    corr.index = [f"lag{k}" for k in range(K_LAG + 1)]  # optional
+    prep = add_returns_and_lags(merged, k_lag=k_lag)
+    corr = compute_ccf_from_prepared(prep, k_lag=k_lag)
+    corr.index = [f"lag{k}" for k in range(k_lag + 1)]
     return corr
 
-def fit_hac_model_all_years(fuel_type: str, K: int = 3):
-    years = range(2014, 2026)
 
+def fit_hac_model_all_years(fuel_type: str, K: int = 3) -> dict[str, Any]:
+    """Fit pooled distributed-lag OLS with HAC covariance across all years."""
+    k = K
+    years = range(2014, 2026)
     parts = []
-    for y in years:
-        merged = load_merge_year(y, fuel_type=fuel_type, interval="1d")
-        prep = add_returns_and_lags(merged, K_LAG=K)
-        prep = prep.copy()
-        prep["year"] = y
+    for year in years:
+        merged = load_merge_year(year, fuel_type=fuel_type, interval="1d")
+        prep = add_returns_and_lags(merged, k_lag=k).copy()
+        prep["year"] = year
         parts.append(prep)
 
     df_all = (
-        pd.concat(parts, ignore_index=True)
-        .sort_values("day")
-        .reset_index(drop=True)
+        pd.concat(parts, ignore_index=True).sort_values("day").reset_index(drop=True)
     )
+    lag_cols = [f"r_oil_lag{k_i}" for k_i in range(k + 1)]
+    data_model = df_all[["day", "year", "r_fuel"] + lag_cols].dropna()
 
-    data_model = df_all[["day", "year", "r_fuel"] + [f"r_oil_lag{k}" for k in range(K + 1)]].dropna()
+    x_data = sm.add_constant(data_model[lag_cols])
+    y_data = data_model["r_fuel"]
 
-    X = data_model[[f"r_oil_lag{k}" for k in range(K + 1)]]
-    X = sm.add_constant(X)
-    y = data_model["r_fuel"]
-
-    ols = sm.OLS(y, X).fit()
+    ols = sm.OLS(y_data, x_data).fit()
     ols_hac = ols.get_robustcov_results(cov_type="HAC", maxlags=7)
 
-    results = {
+    return {
         "r2": ols.rsquared,
         "f_stat": ols.fvalue,
         "f_pval": ols.f_pvalue,
@@ -374,60 +301,54 @@ def fit_hac_model_all_years(fuel_type: str, K: int = 3):
         "tvalues": ols_hac.tvalues,
         "pvalues": ols_hac.pvalues,
         "conf_int": ols_hac.conf_int(),
-        "variables": X.columns.tolist(),
+        "variables": x_data.columns.tolist(),
     }
 
-    return results
 
-def fit_asym_hac_model_all_years(fuel_type: str, K: int = 3):
+def fit_asym_hac_model_all_years(fuel_type: str, K: int = 3) -> dict[str, Any]:
+    """Fit asymmetric pooled lag model with HAC covariance and Wald test."""
+    k = K
     years = range(2014, 2026)
-
     parts = []
-    for y in years:
-        merged = load_merge_year(y, fuel_type=fuel_type, interval="1d")
-        prep = add_returns_and_lags(merged, K_LAG=K)
-        prep = prep.copy()
-        prep["year"] = y
+    for year in years:
+        merged = load_merge_year(year, fuel_type=fuel_type, interval="1d")
+        prep = add_returns_and_lags(merged, k_lag=k).copy()
+        prep["year"] = year
         parts.append(prep)
 
     df_all = (
-        pd.concat(parts, ignore_index=True)
-        .sort_values("day")
-        .reset_index(drop=True)
+        pd.concat(parts, ignore_index=True).sort_values("day").reset_index(drop=True)
     )
-
-    data_model = df_all[["day", "year", "r_fuel"] + [f"r_oil_lag{k}" for k in range(K + 1)]].dropna()
+    lag_cols = [f"r_oil_lag{k_i}" for k_i in range(k + 1)]
+    data_model = df_all[["day", "year", "r_fuel"] + lag_cols].dropna()
 
     df_asym = data_model.copy()
+    for k_i in range(k + 1):
+        col = f"r_oil_lag{k_i}"
+        df_asym[f"r_oil_pos_lag{k_i}"] = df_asym[col].clip(lower=0)
+        df_asym[f"r_oil_neg_lag{k_i}"] = df_asym[col].clip(upper=0)
 
-    for k in range(K + 1):
-        col = f"r_oil_lag{k}"
-        df_asym[f"r_oil_pos_lag{k}"] = df_asym[col].clip(lower=0)
-        df_asym[f"r_oil_neg_lag{k}"] = df_asym[col].clip(upper=0)
+    pos_cols = [f"r_oil_pos_lag{k_i}" for k_i in range(k + 1)]
+    neg_cols = [f"r_oil_neg_lag{k_i}" for k_i in range(k + 1)]
+    df_asym = df_asym.dropna(subset=["r_fuel"] + pos_cols + neg_cols).reset_index(
+        drop=True
+    )
 
-    pos_cols = [f"r_oil_pos_lag{k}" for k in range(K + 1)]
-    neg_cols = [f"r_oil_neg_lag{k}" for k in range(K + 1)]
+    x_data = sm.add_constant(df_asym[pos_cols + neg_cols])
+    y_data = df_asym["r_fuel"]
 
-    df_asym = df_asym.dropna(subset=["r_fuel"] + pos_cols + neg_cols).reset_index(drop=True)
-
-    X = df_asym[pos_cols + neg_cols]
-    X = sm.add_constant(X)
-    y = df_asym["r_fuel"]
-
-    ols = sm.OLS(y, X).fit()
+    ols = sm.OLS(y_data, x_data).fit()
     ols_hac = ols.get_robustcov_results(cov_type="HAC", maxlags=14)
 
-    names = list(X.columns)
-    p = len(names)
+    names = list(x_data.columns)
+    r_matrix = np.zeros((k + 1, len(names)))
+    for k_i in range(k + 1):
+        r_matrix[k_i, names.index(f"r_oil_pos_lag{k_i}")] = 1
+        r_matrix[k_i, names.index(f"r_oil_neg_lag{k_i}")] = -1
 
-    R = np.zeros((K + 1, p))
-    for k in range(K + 1):
-        R[k, names.index(f"r_oil_pos_lag{k}")] = 1
-        R[k, names.index(f"r_oil_neg_lag{k}")] = -1
+    wald = ols_hac.wald_test(r_matrix, scalar=True)
 
-    wald = ols_hac.wald_test(R, scalar=True)
-
-    results = {
+    return {
         "r2": ols.rsquared,
         "f_stat": ols.fvalue,
         "f_pval": ols.f_pvalue,
@@ -437,74 +358,57 @@ def fit_asym_hac_model_all_years(fuel_type: str, K: int = 3):
         "tvalues": ols_hac.tvalues,
         "pvalues": ols_hac.pvalues,
         "conf_int": ols_hac.conf_int(),
-        "variables": X.columns.tolist(),
+        "variables": x_data.columns.tolist(),
         "wald_f": float(wald.statistic),
         "wald_pval": float(wald.pvalue),
         "wald_df_num": int(wald.df_num),
         "wald_df_denom": float(wald.df_denom),
     }
 
-    return results
 
-def plot_asym_lag_effects(fuel_type: str, K: int = 3):
-    res = fit_asym_hac_model_all_years(fuel_type=fuel_type, K=K)
-
-    pos_cols = [f"r_oil_pos_lag{k}" for k in range(K + 1)]
-    neg_cols = [f"r_oil_neg_lag{k}" for k in range(K + 1)]
+def plot_asym_lag_effects(fuel_type: str, K: int = 3) -> go.Figure:
+    """Plot asymmetric lag coefficients with 95% confidence intervals."""
+    k = K
+    res = fit_asym_hac_model_all_years(fuel_type=fuel_type, K=k)
+    pos_cols = [f"r_oil_pos_lag{k_i}" for k_i in range(k + 1)]
+    neg_cols = [f"r_oil_neg_lag{k_i}" for k_i in range(k + 1)]
 
     names = res["variables"]
     params = dict(zip(names, res["params"]))
     bse = dict(zip(names, res["bse"]))
 
-    beta_pos = np.array([params[c] for c in pos_cols])
-    beta_neg = np.array([params[c] for c in neg_cols])
-
-    se_pos = np.array([bse[c] for c in pos_cols])
-    se_neg = np.array([bse[c] for c in neg_cols])
-
-    lags = np.arange(K + 1)
+    beta_pos = np.array([params[col] for col in pos_cols])
+    beta_neg = np.array([params[col] for col in neg_cols])
+    se_pos = np.array([bse[col] for col in pos_cols])
+    se_neg = np.array([bse[col] for col in neg_cols])
+    lags = np.arange(k + 1)
 
     fig = go.Figure()
-
     fig.add_trace(
         go.Scatter(
             x=lags,
             y=beta_pos,
             mode="lines+markers",
             name="Oil increase",
-            error_y=dict(
-                type="data",
-                array=1.96 * se_pos,
-                visible=True
-            )
+            error_y=dict(type="data", array=1.96 * se_pos, visible=True),
         )
     )
-
     fig.add_trace(
         go.Scatter(
             x=lags,
             y=beta_neg,
             mode="lines+markers",
             name="Oil decrease",
-            error_y=dict(
-                type="data",
-                array=1.96 * se_neg,
-                visible=True
-            )
+            error_y=dict(type="data", array=1.96 * se_neg, visible=True),
         )
     )
 
     fig.add_hline(y=0)
-
     fig.update_layout(
         template="plotly_white",
         title="Asymmetric Distributed Lag Effects",
         xaxis_title="Lag (days)",
         yaxis_title="Coefficient",
-        xaxis=dict(
-            tickmode="array",
-            tickvals=list(lags)
-        )
+        xaxis=dict(tickmode="array", tickvals=list(lags)),
     )
-
     return fig
